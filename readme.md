@@ -26,8 +26,8 @@ Each shape comes in 3 variants: **Hollow** (standard HSW slot), **Solid** (fille
 | **Hexagon** | Full hexagon |
 | **Pentagon** | Half-hex on one side |
 | **Trapezoid** | Bottom half of a hexagon |
-| **Diamond** | Angled diamond shape (30°–150°) |
-| **Shard** | Half-diamond (bottom-left fragment) |
+| **Diamond** | Angled diamond shape |
+| **Shard** | Half-diamond |
 | **Tier** | Third of a hexagon |
 | **Quarter** | Quarter of a hexagon |
 | **Triangle** | Sixth of a hexagon |
