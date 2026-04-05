@@ -109,18 +109,3 @@ If you find it useful, there's a Ko-fi link on the page 🙂
 - Added debug mirror tool for testing shape reflections
 - Fixed mirror maps for Shard
 
----
-
-## Changelog
-
-### v1.2.1
-- Fixed mirror system for Diamond and Shard shapes
-- Fixed Diamond shape rendering in debug mirror tool
-- Added Diamond and Shard to `INDEXED_PREFIXES` and `remapIndexedType`
-
-### v1.2.0
-- Added **Diamond** shape (Hollow, Solid, Fixing)
-- Added **Shard** shape (Hollow, Solid, Fixing)
-- New icons for Diamond and Shard buttons
-- Added debug mirror tool for testing shape reflections
-- Fixed mirror maps for Shard
