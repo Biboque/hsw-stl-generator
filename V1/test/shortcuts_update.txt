@@ -1,1 +1,0 @@
-Shortcuts update implemented - select tool now shows appropriate shortcuts
