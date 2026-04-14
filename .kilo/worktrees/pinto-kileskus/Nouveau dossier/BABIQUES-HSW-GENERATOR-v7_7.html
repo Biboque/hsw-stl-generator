@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>HSW Designer Pro</title>
+    <style>
+        :root {
+            --bg-deep: #0d0d0d; --bg-side: #161618; --bg-group: #1e1e21;
+            --text-main: #e0e0e0; --text-muted: #88888c;
+            --accent: #f39c12; --accent-hover: #e67e22;
+            --danger: #c0392b; --border: #2a2a2e;
+        }
+        body { margin:0; font-family:'Inter','Segoe UI',sans-serif; display:flex; height:100vh; background:var(--bg-deep); color:var(--text-main); overflow:hidden; font-size:13px; }
+        #sidebar {
+            width:300px; background:var(--bg-side); padding:25px;
+            display:flex; flex-direction:column; gap:20px;
+            border-right:1px solid var(--border); z-index:100;
+            max-height:100vh; overflow-y:auto; overflow-x:hidden;
+            scrollbar-gutter:stable;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,.18) transparent;
+        }
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-track { background: transparent; }
+        #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 999px; }
+        #sidebar:hover::-webkit-scrollbar-thumb { background: rgba(243,156,18,.35); }
+        #sidebar-header { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:15px; }
+        #sidebar-header h1 { margin:0; font-size:1.2em; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+        #sidebar-header span { color:var(--accent); }
+        #canvas-container { flex-grow:1; position:relative; }
+        .group { background:var(--bg-group); padding:18px; border-radius:6px; border:1px solid var(--border); }
+        .group-header { font-size:.85em; text-transform:uppercase; color:var(--text-muted); letter-spacing:1.5px; margin-bottom:15px; font-weight:600; display:flex; align-items:center; gap:8px; }
+        .group-header::before { content:''; display:inline-block; width:6px; height:6px; background:var(--accent); border-radius:1px; }
+        .btn { background:transparent; border:1px solid var(--border); padding:10px 14px; color:var(--text-main); cursor:pointer; border-radius:4px; width:100%; margin-bottom:8px; transition:all .2s; text-align:left; display:flex; align-items:center; gap:10px; font-size:.95em; }
+        .btn:hover { background:rgba(255,255,255,.03); border-color:#444; }
+        .btn.active { border-color:var(--accent); background:rgba(243,156,18,.08); color:var(--accent); font-weight:600; }
+        .btn.active svg { fill:var(--accent); }
+        .btn svg { width:16px; height:16px; fill:var(--text-muted); }
+        .btn-main { background:var(--accent); border:none; color:#000; font-weight:700; text-align:center; justify-content:center; text-transform:uppercase; letter-spacing:1px; margin-top:10px; }
+        .btn-main:hover { background:var(--accent-hover); }
+        .btn-danger { background:transparent; border:1px solid rgba(192,57,43,.4); color:var(--danger); text-align:center; justify-content:center; font-size:.9em; margin-top:5px; }
+        .btn-danger:hover { background:rgba(192,57,43,.1); border-color:var(--danger); }
+        .info-box { background:rgba(243,156,18,.07); border:1px solid rgba(243,156,18,.2); border-radius:4px; padding:10px 12px; font-size:.82em; color:var(--text-muted); line-height:1.5; }
+        .info-box strong { color:var(--accent); }
+        .btn-pair { display:flex; gap:6px; margin-bottom:8px; }
+        .btn-pair:last-child { margin-bottom:0; }
+        .btn-pair .btn { flex:1; flex-direction:column; justify-content:center; align-items:center; padding:10px 6px; gap:5px; margin-bottom:0; font-size:.78em; }
+        .btn-trio { display:flex; gap:4px; }
+        .btn-trio .btn { flex:1; flex-direction:column; justify-content:center; align-items:center; padding:8px 3px; gap:4px; margin-bottom:0; font-size:.72em; text-align:center; }
+        #hud { position:absolute; top:16px; right:16px; z-index:200; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+        #hud-buttons { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; min-width:220px; }
+        #hud-controls { background:rgba(22,22,24,.9); border:1px solid var(--border); border-radius:6px; padding:12px 14px; backdrop-filter:blur(8px); font-size:.78em; color:var(--text-muted); line-height:1.9; min-width:220px; }
+        .hud-title { font-size:.75em; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-muted); margin-bottom:8px; font-weight:600; display:flex; align-items:center; gap:6px; }
+        .hud-title::before { content:''; display:inline-block; width:5px; height:5px; background:var(--accent); border-radius:1px; }
+        .hud-row { display:flex; justify-content:space-between; gap:16px; }
+        .hud-key { display:inline-block; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); border-radius:3px; padding:1px 6px; font-family:monospace; font-size:.9em; color:var(--text-main); white-space:nowrap; }
+        .hud-key.paint-active { background:rgba(243,156,18,.18); border-color:var(--accent); color:var(--accent); }
+        .hud-key.erase-active { background:rgba(192,57,43,.18); border-color:var(--danger); color:var(--danger); }
+        .hud-btn { background:rgba(22,22,24,.9); border:1px solid var(--border); border-radius:5px; color:var(--text-muted); cursor:pointer; padding:7px 12px; font-size:.8em; backdrop-filter:blur(8px); transition:all .2s; display:flex; align-items:center; gap:6px; white-space:nowrap; font-family:inherit; }
+        .hud-btn:hover { border-color:#555; color:var(--text-main); background:rgba(40,40,44,.95); }
+        .hud-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(243,156,18,.08); }
+        #about-panel { position:absolute; bottom:16px; right:16px; z-index:200; background:rgba(22,22,24,.9); border:1px solid var(--border); border-radius:6px; padding:12px 14px; backdrop-filter:blur(8px); font-size:.75em; color:var(--text-muted); line-height:1.7; min-width:240px; max-width:280px; }
+        #about-panel p { margin:0 0 4px 0; }
+        #about-panel a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(243,156,18,.3); transition:border-color .2s; }
+        #about-panel a:hover { border-bottom-color:var(--accent); }
+        #hud-stats { position:absolute; top:16px; left:16px; z-index:200; background:rgba(22,22,24,.9); border:1px solid var(--border); border-radius:6px; padding:10px 14px; backdrop-filter:blur(8px); font-size:.8em; display:flex; flex-direction:column; gap:6px; }
+        .hud-stat-row { display:flex; justify-content:space-between; gap:16px; white-space:nowrap; }
+        #canvas-container.painting { cursor:crosshair; }
+        #canvas-container.erasing  { cursor:cell; }
+    </style>
+</head>
+<body>
+<div id="sidebar">
+    <div id="sidebar-header">
+        <h1>Babique's <span>HSW</span> Generator</h1>
+        <div style="font-size:.8em;color:var(--text-muted);">v7.6</div>
+    </div>
+    <div class="group">
+        <div class="group-header" data-i18n="hex-group-header">Hexagones</div>
+        <div class="btn-trio">
+            <button id="addBtn" class="btn active">
+                <svg viewBox="0 0 24 24" width="20" height="20"><polygon points="8.25,5.5 15.75,5.5 19.5,12 15.75,18.5 8.25,18.5 4.5,12"/><polygon points="9.75,8.1 14.25,8.1 16.5,12 14.25,15.9 9.75,15.9 7.5,12" fill="#1e1e21"/></svg>
+                <span data-i18n="hexhol-btn">Creux</span>
+            </button>
+            <button id="hexFullBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><polygon points="8.25,5.5 15.75,5.5 19.5,12 15.75,18.5 8.25,18.5 4.5,12"/></svg>
+                <span data-i18n="hexfull-btn">Plein</span>
+            </button>
+            <button id="hexFixFullBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><polygon points="8.25,5.5 15.75,5.5 19.5,12 15.75,18.5 8.25,18.5 4.5,12"/><circle cx="12" cy="12" r="3.5" fill="#1e1e21"/><circle cx="12" cy="12" r="1.5"/></svg>
+                <span data-i18n="hexfixfull-btn">Fixation</span>
+            </button>
+        </div>
+    </div>
+    <div class="group">
+        <div class="group-header" data-i18n="trap-group-header">Trapèzes</div>
+        <div class="btn-trio">
+            <button id="trapBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4.5 12L8.25 5.5 15.75 5.5 19.5 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="4.5,12 8.25,18.5 15.75,18.5 19.5,12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" opacity=".95"/></svg>
+                <span data-i18n="trap-btn">Creux</span>
+            </button>
+            <button id="trapFullBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4.5 12L8.25 5.5 15.75 5.5 19.5 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="4.5,12 8.25,18.5 15.75,18.5 19.5,12" fill="currentColor" opacity=".9"/></svg>
+                <span data-i18n="trapfull-btn">Plein</span>
+            </button>
+            <button id="trapFixBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4.5 12L8.25 5.5 15.75 5.5 19.5 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="4.5,12 8.25,18.5 15.75,18.5 19.5,12" fill="currentColor" opacity=".45"/><circle cx="12" cy="15.25" r="2.2" fill="#1e1e21"/></svg>
+                <span data-i18n="trapfix-btn">Fixation</span>
+            </button>
+        </div>
+    </div>
+    <div class="group">
+        <div class="group-header" data-i18n="penta-group-header">Pentagones</div>
+        <div class="btn-trio">
+            <button id="pentaBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5.5 8.25 5.5 4.5 12 8.25 18.5 12 18.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="12,5.5 15.75,5.5 19.5,12 15.75,18.5 12,18.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" opacity=".95"/></svg>
+                <span data-i18n="penta-btn">Creux</span>
+            </button>
+            <button id="pentaFullBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5.5 8.25 5.5 4.5 12 8.25 18.5 12 18.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="12,5.5 15.75,5.5 19.5,12 15.75,18.5 12,18.5" fill="currentColor" opacity=".9"/></svg>
+                <span data-i18n="pentafull-btn">Plein</span>
+            </button>
+            <button id="pentaFixBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5.5 8.25 5.5 4.5 12 8.25 18.5 12 18.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="12,5.5 15.75,5.5 19.5,12 15.75,18.5 12,18.5" fill="currentColor" opacity=".45"/><circle cx="15" cy="12" r="2.1" fill="#1e1e21"/></svg>
+                <span data-i18n="pentafix-btn">Fixation</span>
+            </button>
+        </div>
+    </div>
+    <div class="group">
+        <div class="group-header" data-i18n="quart-group-header">Quarts</div>
+        <div class="btn-trio">
+            <button id="quartBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M8.25 5.5 15.75 5.5 19.5 12M12 18.5 8.25 18.5 4.5 12 8.25 5.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="12,12 19.5,12 15.75,18.5 12,18.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" opacity=".95"/></svg>
+                <span data-i18n="quart-btn">Creux</span>
+            </button>
+            <button id="quartFullBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M8.25 5.5 15.75 5.5 19.5 12M12 18.5 8.25 18.5 4.5 12 8.25 5.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="12,12 19.5,12 15.75,18.5 12,18.5" fill="currentColor" opacity=".9"/></svg>
+                <span data-i18n="quartfull-btn">Plein</span>
+            </button>
+            <button id="quartFixBtn" class="btn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M8.25 5.5 15.75 5.5 19.5 12M12 18.5 8.25 18.5 4.5 12 8.25 5.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><polygon points="12,12 19.5,12 15.75,18.5 12,18.5" fill="currentColor" opacity=".45"/><circle cx="14.8" cy="15.25" r="2.0" fill="#1e1e21"/></svg>
+                <span data-i18n="quartfix-btn">Fixation</span>
+            </button>
+        </div>
+    </div>
+    <div class="group">
+        <div class="group-header" data-i18n="mirror-header">Miroir</div>
+        <div class="btn-trio">
+            <button id="mirrorXBtn" class="btn"><span data-i18n="mirror-x-btn">X</span></button>
+            <button id="mirrorYBtn" class="btn"><span data-i18n="mirror-y-btn">Y</span></button>
+            <button id="mirrorZBtn" class="btn"><span data-i18n="mirror-z-btn">Z</span></button>
+        </div>
+    </div>
+    <div class="group">
+        <div class="group-header" data-i18n="actions-header">Actions</div>
+        <button id="removeBtn" class="btn" style="margin-bottom:8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z"/></svg>
+            <span data-i18n="remove-btn">Gomme</span>
+        </button>
+        <button id="borderBtn" class="btn" style="margin-bottom:8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><polygon points="12,3 20.8,8 20.8,16 12,21 3.2,16 3.2,8"/><polygon points="12,7 17.2,10 17.2,14 12,17 6.8,14 6.8,10"/></svg>
+            <span data-i18n="border-btn">Bordure ext.</span>
+        </button>
+        <button id="exportBtn" class="btn btn-main" data-i18n="export-btn">Exporter STL</button>
+        <button id="clearBtn" class="btn btn-danger" data-i18n="clear-btn">🗑 Tout effacer</button>
+    </div>
+</div>
+<div id="canvas-container">
+    <div id="hud-stats">
+        <div class="hud-stat-row"><span data-i18n="stats-label" style="color:var(--text-muted);">Total Éléments</span><span id="hexCount" style="color:var(--accent);font-weight:700;">0</span></div>
+        <div class="hud-stat-row"><span data-i18n="stats-size-label" style="color:var(--text-muted);">Taille</span><span id="pieceSize" style="color:var(--text-main);font-weight:600;">— × —</span></div>
+    </div>
+    <div id="hud">
+        <div id="hud-buttons">
+            <button id="langBtn" class="hud-btn" style="font-weight:700;letter-spacing:.5px;">EN</button>
+            <button id="resetViewBtn" class="hud-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg><span data-i18n="hud-reset">Centrer</span></button>
+            <button id="gridToggleBtn" class="hud-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg><span data-i18n="hud-grid">Grille</span></button>
+            <button id="viewToggleBtn" class="hud-btn" title="Basculer vue (P)" style="padding:7px 10px;"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><polygon points="10,3 17,7 10,11 3,7" fill="rgba(255,255,255,0.06)"/><polygon points="3,7 10,11 10,17 3,13" fill="rgba(255,255,255,0.03)"/><polygon points="17,7 10,11 10,17 17,13" fill="rgba(255,255,255,0.09)"/></svg></button>
+        </div>
+        <div id="hud-controls">
+            <div class="hud-title" data-i18n="hud-shortcuts-title">Raccourcis</div>
+            <div class="hud-row"><span data-i18n="hud-place">Poser / supprimer</span><span><span class="hud-key">Clic</span></span></div>
+            <div class="hud-row"><span data-i18n="hud-paint">Peindre</span><span><span class="hud-key" id="spaceKey">Espace</span> + survol</span></div>
+            <div class="hud-row"><span data-i18n="hud-erase-mode">Effacer</span><span><span class="hud-key" id="ctrlKey">Ctrl</span> + survol</span></div>
+            <div class="hud-row"><span data-i18n="hud-orbit">Orbiter</span><span><span class="hud-key" data-i18n="hud-orbit-key">Clic glissé</span></span></div>
+            <div class="hud-row"><span data-i18n="hud-zoom">Zoom</span><span><span class="hud-key">Molette</span> / <span class="hud-key">Milieu</span></span></div>
+            <div class="hud-row"><span data-i18n="hud-pan">Pan</span><span><span class="hud-key" data-i18n="hud-pan-key">Clic droit</span></span></div>
+            <div class="hud-row"><span data-i18n="hud-reset-key">Centrer vue</span><span><span class="hud-key">F</span></span></div>
+            <div class="hud-row"><span data-i18n="hud-toggle-key">Basculer vue</span><span><span class="hud-key">P</span></span></div>
+        </div>
+    </div>
+</div>
+<div id="about-panel">
+    <div class="hud-title" data-i18n="details-title">À propos</div>
+    <p data-i18n="details-origin">Système <strong style="color:var(--text-main);">HSW</strong> créé par <strong style="color:var(--text-main);">@RostaP</strong> :</p>
+    <p><a href="https://www.printables.com/model/152592-honeycomb-storage-wall" target="_blank" rel="noopener">Honeycomb Storage Wall</a></p>
+    <p data-i18n="details-inspired" style="margin-top:6px;">Inspirations :</p>
+    <p><a href="https://gridfinity.perplexinglabs.com/pr/hsw/0/0" target="_blank" rel="noopener">HSW Designer — perplexinglabs</a></p>
+    <p><a href="https://www.printables.com/model/380870-customizable-honeycomb-storage-wall-openscad/files" target="_blank" rel="noopener">Customizable HSW — OpenSCAD</a></p>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLExporter }   from 'three/addons/exporters/STLExporter.js';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dimensions HSW
+   ═══════════════════════════════════════════════════════════════════════════ */
+const HOLE_W=20, WALL=1.8, WALL_MIN=0.8, DEPTH=8, H_STEP=2;
+const HEX_H=HOLE_W+WALL*2, HEX_S=HEX_H/Math.sqrt(3), INNER_S=HOLE_W/Math.sqrt(3);
+const DEG60=Math.PI/3;
+const hexPts=r=>Array.from({length:6},(_,i)=>new THREE.Vector2(r*Math.cos(i*DEG60),r*Math.sin(i*DEG60)));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Geometry helpers
+   ═══════════════════════════════════════════════════════════════════════════ */
+function mergeGeos(geos){
+    const P=[],N=[],I=[];let O=0;
+    for(const g of geos){const p=g.attributes.position.array,n=g.attributes.normal?.array,x=g.index?.array;P.push(...p);if(n)N.push(...n);const c=p.length/3;if(x)I.push(...x.map(i=>i+O));else for(let i=0;i<c;i++)I.push(i+O);O+=c;g.dispose();}
+    const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(new Float32Array(P),3));if(N.length)G.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(N),3));G.setIndex(I);G.computeVertexNormals();return G;
+}
+function ext(shape,d,z=0){const g=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:false});if(z)g.translate(0,0,z);return g;}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   v7.6 — shoulderPair : passe (innerS, wo) au makeFn
+   wo = épaisseur de paroi pour les arêtes de coupe (WALL ou WALL_MIN)
+   afin que l'épaulement soit présent sur TOUTES les faces intérieures
+   ═══════════════════════════════════════════════════════════════════════════ */
+function shoulderPair(makeFn,sb){
+    const narrow=makeFn(INNER_S+(WALL-WALL_MIN),WALL_MIN);
+    const full  =makeFn(INNER_S,WALL);
+    return sb?mergeGeos([narrow(H_STEP,0),full(DEPTH-H_STEP,H_STEP)]):mergeGeos([full(DEPTH-H_STEP,0),narrow(H_STEP,DEPTH-H_STEP)]);
+}
+
+/* ─── Hexagone creux (pas d'arête de coupe, wo ignoré) ─────────────────── */
+function buildHexByCrown(sb){
+    const outer=hexPts(HEX_S);
+    return shoulderPair(innerS=>{
+        const inner=hexPts(innerS);
+        return(d,z)=>{const s=new THREE.Shape(outer);const h=new THREE.Path();h.moveTo(inner[0].x,inner[0].y);for(let i=5;i>=1;i--)h.lineTo(inner[i].x,inner[i].y);h.closePath();s.holes.push(h);return ext(s,d,z);};
+    },sb);
+}
+
+/* ─── Trapèze creux (wo pour l'arête de coupe horizontale) ─────────────── */
+function buildTrapGeometry(angle,sb){
+    const ext=hexPts(HEX_S);
+    const geo=shoulderPair((innerS,wo)=>{
+        const inn=hexPts(innerS);
+        return(d,z)=>{const s=new THREE.Shape();s.moveTo(ext[0].x,ext[0].y);s.lineTo(ext[1].x,ext[1].y);s.lineTo(ext[2].x,ext[2].y);s.lineTo(ext[3].x,ext[3].y);s.lineTo(ext[0].x,ext[3].y);s.closePath();const hy=ext[3].y+wo;const h=new THREE.Path();h.moveTo(inn[0].x-wo/2,hy);h.lineTo(inn[3].x+wo/2,hy);h.lineTo(inn[2].x,inn[2].y);h.lineTo(inn[1].x,inn[1].y);h.lineTo(inn[0].x,inn[0].y);h.closePath();s.holes.push(h);return ext(s,d,z);};
+    },sb);
+    if(angle)geo.rotateZ(angle);return geo;
+}
+
+/* ─── Trapèze fixation ─────────────────────────────────────────────────── */
+function buildTrapFixGeometry(angle,sb){
+    const ext=hexPts(HEX_S),holeY=(ext[1].y+ext[0].y)/2,shaftR=1.6,cskR=5,cskDepth=4.5,shaftDepth=DEPTH-cskDepth,L=12;
+    function tw(r){const s=new THREE.Shape();s.moveTo(ext[0].x,ext[0].y);s.lineTo(ext[1].x,ext[1].y);s.lineTo(ext[2].x,ext[2].y);s.lineTo(ext[3].x,ext[3].y);s.lineTo(ext[0].x,ext[3].y);s.closePath();const h=new THREE.Path();h.absarc(0,holeY,r,0,Math.PI*2,true);s.holes.push(h);return s;}
+    function cone(a,b,zs){return Array.from({length:L},(_,i)=>{const t=i/L;const r=Math.max(a+(b-a)*t,a+(b-a)*(i+1)/L);return ext(tw(r),cskDepth/L,zs+t*cskDepth);});}
+    const g=sb?[ext(tw(shaftR),shaftDepth,0),...cone(shaftR,cskR,shaftDepth)]:[...cone(cskR,shaftR,0),ext(tw(shaftR),shaftDepth,cskDepth)];
+    const geo=mergeGeos(g);if(angle)geo.rotateZ(angle);return geo;
+}
+
+/* ─── Hexagone plein ───────────────────────────────────────────────────── */
+function buildHexFullGeometry(){return new THREE.ExtrudeGeometry(new THREE.Shape(hexPts(HEX_S)),{depth:DEPTH,bevelEnabled:false});}
+
+/* ─── Hexagone fixation ────────────────────────────────────────────────── */
+function buildHexFixFullGeometry(sb){
+    const ext=hexPts(HEX_S),shaftR=1.6,cskR=5,cskDepth=4.5,shaftDepth=DEPTH-cskDepth,L=12;
+    function hw(r){const s=new THREE.Shape(ext);const h=new THREE.Path();h.absarc(0,0,r,0,Math.PI*2,true);s.holes.push(h);return s;}
+    function cone(a,b,zs){return Array.from({length:L},(_,i)=>{const t=i/L;const r=Math.max(a+(b-a)*t,a+(b-a)*(i+1)/L);return ext(hw(r),cskDepth/L,zs+t*cskDepth);});}
+    return mergeGeos(sb?[ext(hw(shaftR),shaftDepth,0),...cone(shaftR,cskR,shaftDepth)]:[...cone(cskR,shaftR,0),ext(hw(shaftR),shaftDepth,cskDepth)]);
+}
+
+/* ─── Trapèze plein ────────────────────────────────────────────────────── */
+function buildTrapFullGeometry(angle){
+    const ext=hexPts(HEX_S);const s=new THREE.Shape();s.moveTo(ext[0].x,ext[0].y);s.lineTo(ext[1].x,ext[1].y);s.lineTo(ext[2].x,ext[2].y);s.lineTo(ext[3].x,ext[3].y);s.lineTo(ext[0].x,ext[3].y);s.closePath();
+    const geo=new THREE.ExtrudeGeometry(s,{depth:DEPTH,bevelEnabled:false});if(angle)geo.rotateZ(angle);return geo;
+}
+
+function sectorAngle(s){return(s-1)*Math.PI/3;}
+
+/* ─── Pentagone creux (wo pour l'arête de coupe verticale) ─────────────── */
+function buildPentaGeometry(corner,sb){
+    const ext=hexPts(HEX_S);
+    const geo=shoulderPair((innerS,wo)=>{
+        const inn=hexPts(innerS);
+        return(d,z)=>{const s=new THREE.Shape();s.moveTo(0,ext[1].y);s.lineTo(ext[1].x,ext[1].y);s.lineTo(ext[0].x,ext[0].y);s.lineTo(ext[5].x,ext[5].y);s.lineTo(0,ext[5].y);s.closePath();const h=new THREE.Path();h.moveTo(wo,inn[5].y);h.lineTo(inn[5].x,inn[5].y);h.lineTo(inn[0].x,inn[0].y);h.lineTo(inn[1].x,inn[1].y);h.lineTo(wo,inn[1].y);h.closePath();s.holes.push(h);return ext(s,d,z);};
+    },sb);
+    geo.rotateZ(corner*DEG60);return geo;
+}
+
+/* ─── Pentagone plein ──────────────────────────────────────────────────── */
+function buildPentaFullGeometry(corner){
+    const ext=hexPts(HEX_S);const s=new THREE.Shape();s.moveTo(0,ext[1].y);s.lineTo(ext[1].x,ext[1].y);s.lineTo(ext[0].x,ext[0].y);s.lineTo(ext[5].x,ext[5].y);s.lineTo(0,ext[5].y);s.closePath();
+    const geo=new THREE.ExtrudeGeometry(s,{depth:DEPTH,bevelEnabled:false});geo.rotateZ(corner*DEG60);return geo;
+}
+
+/* ─── Pentagone fixation ───────────────────────────────────────────────── */
+function buildPentaFixGeometry(corner,sb){
+    const ext=hexPts(HEX_S),cutX=0,shaftR=1.6,cskR=4.5,cskDepth=4.5,shaftDepth=DEPTH-cskDepth,L=12;
+    const hx=(cutX+ext[1].x+ext[0].x+ext[5].x+cutX)/5,hy=(ext[1].y+ext[1].y+ext[0].y+ext[5].y+ext[5].y)/5;
+    function pw(r){const s=new THREE.Shape();s.moveTo(cutX,ext[1].y);s.lineTo(ext[1].x,ext[1].y);s.lineTo(ext[0].x,ext[0].y);s.lineTo(ext[5].x,ext[5].y);s.lineTo(cutX,ext[5].y);s.closePath();const h=new THREE.Path();h.absarc(hx,hy,r,0,Math.PI*2,false);s.holes.push(h);return s;}
+    function cone(a,b,zs){return Array.from({length:L},(_,i)=>{const t=i/L;const r=Math.max(a+(b-a)*t,a+(b-a)*(i+1)/L);return ext(pw(r),cskDepth/L,zs+t*cskDepth);});}
+    const geo=mergeGeos(sb?[ext(pw(shaftR),shaftDepth,0),...cone(shaftR,cskR,shaftDepth)]:[...cone(cskR,shaftR,0),ext(pw(shaftR),shaftDepth,cskDepth)]);geo.rotateZ(corner*DEG60);return geo;
+}
+
+/* ─── Quarts d'hex ─────────────────────────────────────────────────────── */
+function makeQuartOuterShape(ext,q){
+    const s=new THREE.Shape();
+    if(q===0){s.moveTo(0,0);s.lineTo(ext[0].x,ext[0].y);s.lineTo(ext[1].x,ext[1].y);s.lineTo(0,ext[1].y);}
+    else if(q===1){s.moveTo(0,ext[1].y);s.lineTo(-ext[1].x,ext[1].y);s.lineTo(-ext[0].x,ext[0].y);s.lineTo(0,0);}
+    else if(q===2){s.moveTo(0,0);s.lineTo(-ext[0].x,-ext[0].y);s.lineTo(-ext[1].x,-ext[1].y);s.lineTo(0,-ext[1].y);}
+    else{s.moveTo(0,-ext[1].y);s.lineTo(ext[1].x,-ext[1].y);s.lineTo(ext[0].x,-ext[0].y);s.lineTo(0,0);}
+    s.closePath();return s;
+}
+
+/* ─── v7.6 : makeQuartHolePath reçoit wo pour les 2 arêtes de coupe ──── */
+function makeQuartHolePath(inn,q,wo){
+    const hy=wo;const h=new THREE.Path();
+    if(q===0){h.moveTo(inn[0].x-wo/2,hy);h.lineTo(wo,hy);h.lineTo(wo,inn[1].y);h.lineTo(inn[1].x,inn[1].y);h.lineTo(inn[0].x,inn[0].y);}
+    else if(q===1){h.moveTo(-inn[0].x,inn[0].y);h.lineTo(-inn[1].x,inn[1].y);h.lineTo(-wo,inn[1].y);h.lineTo(-wo,hy);h.lineTo(-(inn[0].x-wo/2),hy);}
+    else if(q===2){h.moveTo(-(inn[0].x-wo/2),-hy);h.lineTo(-wo,-hy);h.lineTo(-wo,-inn[1].y);h.lineTo(-inn[1].x,-inn[1].y);h.lineTo(-inn[0].x,-inn[0].y);}
+    else{h.moveTo(inn[0].x-wo/2,-hy);h.lineTo(wo,-hy);h.lineTo(wo,-inn[1].y);h.lineTo(inn[1].x,-inn[1].y);h.lineTo(inn[0].x,-inn[0].y);}
+    h.closePath();return h;
+}
+
+function quartFixCenter(ext,q){
+    const w=(x,y)=>{if(q===0)return{x,y};if(q===1)return{x:-x,y};if(q===2)return{x:-x,y:-y};return{x,y:-y};};
+    const p=[w(0,0),w(ext[0].x,ext[0].y),w(ext[1].x,ext[1].y),w(0,ext[1].y)];const I=0.82;
+    return{x:(p[0].x+p[1].x+p[2].x+p[3].x)/4*I,y:(p[0].y+p[1].y+p[2].y+p[3].y)/4*I};
+}
+
+/* ─── v7.6 : buildQuartGeometry passe wo à makeQuartHolePath ──────────── */
+function buildQuartGeometry(q,sb){
+    const ext=hexPts(HEX_S);
+    return shoulderPair((innerS,wo)=>{
+        const inn=hexPts(innerS);
+        return(d,z)=>{const s=makeQuartOuterShape(ext,q);s.holes.push(makeQuartHolePath(inn,q,wo));return ext(s,d,z);};
+    },sb);
+}
+
+function buildQuartFullGeometry(q){return new THREE.ExtrudeGeometry(makeQuartOuterShape(hexPts(HEX_S),q),{depth:DEPTH,bevelEnabled:false});}
+
+function buildQuartFixGeometry(q,sb){
+    const ext=hexPts(HEX_S),shaftR=1.6,cskR=4.8,cskDepth=4.2,shaftDepth=DEPTH-cskDepth,L=12;
+    const{x:fcx,y:fcy}=quartFixCenter(ext,q);
+    function dps(px,py,ax,ay,bx,by){const vx=bx-ax,vy=by-ay,wx=px-ax,wy=py-ay;const vv=vx*vx+vy*vy;const t=vv?Math.max(0,Math.min(1,(wx*vx+wy*vy)/vv)):0;return Math.hypot(px-(ax+t*vx),py-(ay+t*vy));}
+    function qo(ext,q){if(q===0)return[{x:0,y:0},{x:ext[0].x,y:ext[0].y},{x:ext[1].x,y:ext[1].y},{x:0,y:ext[1].y}];if(q===1)return[{x:0,y:ext[1].y},{x:-ext[1].x,y:ext[1].y},{x:-ext[0].x,y:ext[0].y},{x:0,y:0}];if(q===2)return[{x:0,y:0},{x:-ext[0].x,y:-ext[0].y},{x:-ext[1].x,y:-ext[1].y},{x:0,y:-ext[1].y}];return[{x:0,y:-ext[1].y},{x:ext[1].x,y:-ext[1].y},{x:ext[0].x,y:-ext[0].y},{x:0,y:0}];}
+    const qO=qo(ext,q);let md=Infinity;for(let i=0;i<qO.length;i++){const a=qO[i],b=qO[(i+1)%qO.length];md=Math.min(md,dps(fcx,fcy,a.x,a.y,b.x,b.y));}
+    const mx=Math.max(0.1,md-0.25),sr=Math.min(shaftR,mx),cr=Math.min(cskR,mx);
+    function qw(r){const s=makeQuartOuterShape(ext,q);const h=new THREE.Path();h.absarc(fcx,fcy,r,0,Math.PI*2,false);s.holes.push(h);return s;}
+    function cone(a,b,zs){return Array.from({length:L},(_,i)=>{const t=i/L;const r=Math.min(Math.max(a+(b-a)*t,a+(b-a)*(i+1)/L),mx);return ext(qw(r),cskDepth/L,zs+t*cskDepth);});}
+    return mergeGeos(sb?[ext(qw(sr),shaftDepth,0),...cone(sr,cr,shaftDepth)]:[...cone(cr,sr,0),ext(qw(sr),shaftDepth,cskDepth)]);
+}
+
+function buildGeometry(type){
+    const sb=shoulderDir==='back';
+    if(type.startsWith('trap_')){const s=+type.slice(5);return buildTrapGeometry(sectorAngle(s),sb);}
+    if(type.startsWith('trapFix_')){const s=+type.slice(8);return buildTrapFixGeometry(sectorAngle(s),sb);}
+    if(type.startsWith('trapFull_')){const s=+type.slice(9);return buildTrapFullGeometry(sectorAngle(s));}
+    if(type.startsWith('penta_')){const c=+type.slice(6);return buildPentaGeometry(c,sb);}
+    if(type.startsWith('pentaFix_')){const c=+type.slice(9);return buildPentaFixGeometry(c,sb);}
+    if(type.startsWith('pentaFull_')){const c=+type.slice(10);return buildPentaFullGeometry(c);}
+    if(type.startsWith('quartFix_')){const q=+type.slice(9);return buildQuartFixGeometry(q,sb);}
+    if(type.startsWith('quartFull_')){const q=+type.slice(10);return buildQuartFullGeometry(q);}
+    if(type.startsWith('quart_')){const q=+type.slice(6);return buildQuartGeometry(q,sb);}
+    if(type==='hexFull')return buildHexFullGeometry();
+    if(type==='hexFixFull')return buildHexFixFullGeometry(sb);
+    return buildHexByCrown(sb);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Bordure extérieure
+   ═══════════════════════════════════════════════════════════════════════════ */
+let showBorder=false;const borderMeshes=new Map();
+const BORDER_MAT=new THREE.MeshStandardMaterial({color:0xf39c12,roughness:.35,metalness:.1,emissive:0xf39c12,emissiveIntensity:.06});
+
+function outerBorderPoly(type){
+    const ext=hexPts(HEX_S).map(p=>({x:p.x,y:p.y}));
+    if(type==='add'||type==='hex'||type==='hexFull'||type==='hexFixFull')return{pts:ext};
+    let m;
+    if(m=type.match(/^trap(?:Fix|Full)?_(\d+)$/))return{pts:rotPoly([ext[0],ext[1],ext[2],ext[3]],sectorAngle(+m[1]))};
+    if(m=type.match(/^penta(?:Fix|Full)?_(\d+)$/))return{pts:rotPoly([{x:0,y:ext[5].y},{x:ext[5].x,y:ext[5].y},{x:ext[0].x,y:ext[0].y},{x:ext[1].x,y:ext[1].y},{x:0,y:ext[1].y}],+m[1]*DEG60)};
+    if(m=type.match(/^quart(?:Fix|Full)?_(\d+)$/))return{pts:quartOuterLocal(+m[1])};
+    return null;
+}
+const EDGE_EPS=0.15;
+function edgeCoveredBy(ax,ay,bx,by,sk){for(const[ks,mesh]of elements){if(ks===sk)continue;const r=outerBorderPoly(elementTypes.get(ks));if(!r)continue;const{pts}=r;const{x:nx,y:ny}=mesh.position;if(Math.hypot(nx-(ax+bx)/2,ny-(ay+by)/2)>3*HEX_S)continue;const n=pts.length;for(let i=0;i<n;i++){const p=pts[i],q=pts[(i+1)%n];const px=p.x+nx,py=p.y+ny,qx=q.x+nx,qy=q.y+ny;if((Math.hypot(ax-px,ay-py)<EDGE_EPS&&Math.hypot(bx-qx,by-qy)<EDGE_EPS)||(Math.hypot(ax-qx,ay-qy)<EDGE_EPS&&Math.hypot(bx-px,by-py)<EDGE_EPS))return true;}}return false;}
+function eN(ax,ay,bx,by){const ex=bx-ax,ey=by-ay,l=Math.hypot(ex,ey)||1;return{nx:ey/l,ny:-ex/l};}
+function nbEdgeEnd(wx,wy,sk){for(const[ks,mesh]of elements){if(ks===sk)continue;const r=outerBorderPoly(elementTypes.get(ks));if(!r)continue;const{pts}=r;const{x:nx,y:ny}=mesh.position;for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];const wbx=b.x+nx,wby=b.y+ny;if(Math.hypot(wbx-wx,wby-wy)<EDGE_EPS){const n=eN(a.x+nx,a.y+ny,wbx,wby);return{nx:n.nx,ny:n.ny,dx:wbx-(a.x+nx),dy:wby-(a.y+ny)};}}}return null;}
+function nbEdgeStart(wx,wy,sk){for(const[ks,mesh]of elements){if(ks===sk)continue;const r=outerBorderPoly(elementTypes.get(ks));if(!r)continue;const{pts}=r;const{x:nx,y:ny}=mesh.position;for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];const wax=a.x+nx,way=a.y+ny;if(Math.hypot(wax-wx,way-wy)<EDGE_EPS){const n=eN(wax,way,b.x+nx,b.y+ny);return{nx:n.nx,ny:n.ny,dx:(b.x+nx)-wax,dy:(b.y+ny)-way};}}}return null;}
+function miter(P,n1,d1,n2,d2,cx,cy){if(n1.nx*n2.ny-n1.ny*n2.nx<=1e-6)return null;const ox1=P.x+n1.nx*WALL,oy1=P.y+n1.ny*WALL,ox2=P.x+n2.nx*WALL,oy2=P.y+n2.ny*WALL;const den=d1.dx*d2.dy-d1.dy*d2.dx;if(Math.abs(den)<1e-9)return null;const t=((ox2-ox1)*d2.dy-(oy2-oy1)*d2.dx)/den;const mx=ox1+t*d1.dx-cx,my=oy1+t*d1.dy-cy;if((mx-(P.x-cx))*n2.nx+(my-(P.y-cy))*n2.ny<-1e-6)return null;return{x:mx,y:my};}
+
+function buildBorderGeo(sk,type,q,r){
+    const res=outerBorderPoly(type);if(!res)return null;const{pts:poly}=res;const{x:cx,y:cy}=cellPos(q,r);const n=poly.length;
+    const wp=poly.map(p=>({x:p.x+cx,y:p.y+cy}));
+    const free=wp.map((p,i)=>!edgeCoveredBy(p.x,p.y,wp[(i+1)%n].x,wp[(i+1)%n].y,sk));
+    if(!free.some(f=>f))return null;const geos=[];
+    for(let i=0;i<n;i++){if(!free[i])continue;const A=wp[i],B=wp[(i+1)%n];const{nx,ny}=eN(A.x,A.y,B.x,B.y);const dc={dx:B.x-A.x,dy:B.y-A.y},nc={nx,ny};const ax=A.x-cx,ay=A.y-cy,bx=B.x-cx,by=B.y-cy;let lox=ax+nx*WALL,loy=ay+ny*WALL,rox=bx+nx*WALL,roy=by+ny*WALL;
+    const iP=(i-1+n)%n;if(free[iP]){const Ap=wp[iP];const np=eN(Ap.x,Ap.y,A.x,A.y);const dp={dx:A.x-Ap.x,dy:A.y-Ap.y};const m=miter(A,np,dp,nc,dc,cx,cy);if(m){lox=m.x;loy=m.y;}}else{const nb=nbEdgeEnd(A.x,A.y,sk);if(nb){const m=miter(A,nb,nb,nc,dc,cx,cy);if(m){lox=m.x;loy=m.y;}}}
+    const iN=(i+1)%n;if(free[iN]){const C=wp[(i+2)%n];const nn=eN(B.x,B.y,C.x,C.y);const dn={dx:C.x-B.x,dy:C.y-B.y};const m=miter(B,nc,dc,nn,dn,cx,cy);if(m){rox=m.x;roy=m.y;}}else{const nb=nbEdgeStart(B.x,B.y,sk);if(nb){const m=miter(B,nc,dc,nb,nb,cx,cy);if(m){rox=m.x;roy=m.y;}}}
+    geos.push(new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(ax,ay),new THREE.Vector2(bx,by),new THREE.Vector2(rox,roy),new THREE.Vector2(lox,loy)]),{depth:DEPTH,bevelEnabled:false}));}
+    return geos.length?geos.length===1?geos[0]:mergeGeos(geos):null;
+}
+function addBorderMesh(sk,type,q,r){removeBorderMesh(sk);const g=buildBorderGeo(sk,type,q,r);if(!g)return;const m=new THREE.Mesh(g,BORDER_MAT.clone());const{x,y}=cellPos(q,r);m.position.set(x,y,0);scene.add(m);borderMeshes.set(sk,m);}
+function removeBorderMesh(sk){const m=borderMeshes.get(sk);if(m){scene.remove(m);m.geometry.dispose();borderMeshes.delete(sk);}}
+function refreshNeighborBorders(q,r){if(!showBorder)return;const{x:cx,y:cy}=cellPos(q,r);elements.forEach((mesh,sk)=>{const t=elementTypes.get(sk);const{q:nq,r:nr}=mesh.userData;if(Math.hypot(mesh.position.x-cx,mesh.position.y-cy)>2.5*HEX_S)return;addBorderMesh(sk,t,nq,nr);});}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   State
+   ═══════════════════════════════════════════════════════════════════════════ */
+let scene,camera,orthoCamera,renderer,controls;
+let activeTool='add',shoulderDir='back',isOrtho=false,gridVisible=true;
+let isPainting=false,isErasing=false,lastPaintKey=null,lastEraseKey=null,currentMouseE=null,didDrag=false;
+const mouseStart=new THREE.Vector2(),raycaster=new THREE.Raycaster(),ndcMouse=new THREE.Vector2();
+const elements=new Map(),elementTypes=new Map(),hitPlanes=new Map(),gridLines=[];
+
+function slotKey(q,r,s){return`${q},${r}|${s}`;}
+function trapSlots(p){return Array.from({length:6},(_,i)=>`${p}_${i}`);}
+function quartSlots(p){return Array.from({length:4},(_,i)=>`${p}_${i}`);}
+const FULL_CELL=['hex','hexFull','hexFixFull'];
+const ALL_SLOTS=[...FULL_CELL,...trapSlots('trap'),...trapSlots('trapFix'),...trapSlots('trapFull'),...trapSlots('penta'),...trapSlots('pentaFix'),...trapSlots('pentaFull'),...quartSlots('quart'),...quartSlots('quartFix'),...quartSlots('quartFull')];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Overlap (footprint 2D)
+   ═══════════════════════════════════════════════════════════════════════════ */
+const OE=0.12;
+function polyArea(pts){if(!pts||pts.length<3)return 0;let a=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;a+=pts[i].x*pts[j].y-pts[j].x*pts[i].y;}return Math.abs(a*.5);}
+function polySA(pts){if(!pts||pts.length<3)return 0;let a=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;a+=pts[i].x*pts[j].y-pts[j].x*pts[i].y;}return a*.5;}
+function cr2(ax,ay,bx,by){return ax*by-ay*bx;}
+function iHP(p,a,b){return cr2(b.x-a.x,b.y-a.y,p.x-a.x,p.y-a.y)>=-1e-10;}
+function iLI(p1,p2,p3,p4){const x1=p1.x,y1=p1.y,x2=p2.x,y2=p2.y,x3=p3.x,y3=p3.y,x4=p4.x,y4=p4.y;const d=(x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);if(Math.abs(d)<1e-14)return null;const t=((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/d;return{x:x1+t*(x2-x1),y:y1+t*(y2-y1)};}
+function clipE(poly,a,b){if(!poly.length)return[];const o=[];for(let i=0;i<poly.length;i++){const c=poly[i],p=poly[(i+poly.length-1)%poly.length];const cI=iHP(c,a,b),pI=iHP(p,a,b);if(cI){if(!pI){const ix=iLI(p,c,a,b);if(ix)o.push(ix);}o.push(c);}else if(pI){const ix=iLI(p,c,a,b);if(ix)o.push(ix);}}return o;}
+function iCP(a,b){if(polySA(b)<0)b=[...b].reverse();let o=a;for(let i=0;i<b.length;i++){const a2=b[i],b2=b[(i+1)%b.length];o=clipE(o,a2,b2);if(!o.length)return[];}return o;}
+function tP(pts,cx,cy){return pts.map(p=>({x:p.x+cx,y:p.y+cy}));}
+function rP(pts,ang){const c=Math.cos(ang),s=Math.sin(ang);return pts.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));}
+function hexRL(){return{outer:hexPts(HEX_S).map(p=>({x:p.x,y:p.y})),inner:hexPts(INNER_S).map(p=>({x:p.x,y:p.y}))};}
+function trapOL(){const e=hexPts(HEX_S);return[{x:e[0].x,y:e[0].y},{x:e[1].x,y:e[1].y},{x:e[2].x,y:e[2].y},{x:e[3].x,y:e[3].y},{x:e[0].x,y:e[3].y}];}
+function trapIL(){const e=hexPts(HEX_S),i=hexPts(INNER_S),hy=e[3].y+WALL;return[{x:i[0].x-WALL/2,y:hy},{x:i[3].x+WALL/2,y:hy},{x:i[2].x,y:i[2].y},{x:i[1].x,y:i[1].y},{x:i[0].x,y:i[0].y}];}
+function pentaOL(){const e=hexPts(HEX_S);return[{x:0,y:e[1].y},{x:e[1].x,y:e[1].y},{x:e[0].x,y:e[0].y},{x:e[5].x,y:e[5].y},{x:0,y:e[5].y}];}
+function pentaIL(){const i=hexPts(INNER_S);return[{x:WALL,y:i[5].y},{x:i[5].x,y:i[5].y},{x:i[0].x,y:i[0].y},{x:i[1].x,y:i[1].y},{x:WALL,y:i[1].y}];}
+function quartOL(q){const e=hexPts(HEX_S);if(q===0)return[{x:0,y:0},{x:e[0].x,y:e[0].y},{x:e[1].x,y:e[1].y},{x:0,y:e[1].y}];if(q===1)return[{x:0,y:e[1].y},{x:-e[1].x,y:e[1].y},{x:-e[0].x,y:e[0].y},{x:0,y:0}];if(q===2)return[{x:0,y:0},{x:-e[0].x,y:-e[0].y},{x:-e[1].x,y:-e[1].y},{x:0,y:-e[1].y}];return[{x:0,y:-e[1].y},{x:e[1].x,y:-e[1].y},{x:e[0].x,y:-e[0].y},{x:0,y:0}];}
+function quartIL(q){const i=hexPts(INNER_S),hy=WALL;if(q===0)return[{x:i[0].x-WALL/2,y:hy},{x:WALL,y:hy},{x:WALL,y:i[1].y},{x:i[1].x,y:i[1].y},{x:i[0].x,y:i[0].y}];if(q===1)return[{x:-i[0].x,y:i[0].y},{x:-i[1].x,y:i[1].y},{x:-WALL,y:i[1].y},{x:-WALL,y:hy},{x:-(i[0].x-WALL/2),y:hy}];if(q===2)return[{x:-(i[0].x-WALL/2),y:-hy},{x:-WALL,y:-hy},{x:-WALL,y:-i[1].y},{x:-i[1].x,y:-i[1].y},{x:-i[0].x,y:-i[0].y}];return[{x:i[0].x-WALL/2,y:-hy},{x:WALL,y:-hy},{x:WALL,y:-i[1].y},{x:i[1].x,y:-i[1].y},{x:i[0].x,y:-i[0].y}];}
+
+function worldFootprint(ct,q,r){
+    const{x:cx,y:cy}=cellPos(q,r);const off=pts=>tP(pts,cx,cy);
+    if(ct==='add'||ct==='hex'){const{outer,inner}=hexRL();return{kind:'ring',outer:off(outer),inner:off(inner)};}
+    if(ct==='hexFull'||ct==='hexFixFull')return{kind:'solid',poly:off(hexRL().outer)};
+    let m;if(m=ct.match(/^(trap|trapFix)_(\d+)$/)){const s=+m[2],a=sectorAngle(s);return{kind:'ring',outer:off(rP(trapOL(),a)),inner:off(rP(trapIL(),a))};}
+    if(ct.startsWith('trapFull_')){const s=+ct.slice(9);return{kind:'solid',poly:off(rP(trapOL(),sectorAngle(s)))};}
+    if(m=ct.match(/^(penta|pentaFix)_(\d+)$/)){const c=+m[2];return{kind:'solid',poly:off(rP(pentaOL(),c*DEG60))};}
+    if(ct.startsWith('pentaFull_')){const c=+ct.slice(10);return{kind:'solid',poly:off(rP(pentaOL(),c*DEG60))};}
+    if(m=ct.match(/^(quart|quartFix)_(\d+)$/)){const qi=+m[2];return{kind:'ring',outer:off(quartOL(qi)),inner:off(quartIL(qi))};}
+    if(ct.startsWith('quartFull_')){const qi=+ct.slice(10);return{kind:'solid',poly:off(quartOL(qi))};}
+    return{kind:'none'};
+}
+function olap(a,b){
+    if(!a||!b||a.kind==='none'||b.kind==='none')return 0;
+    const rs=(o,i,s)=>{const oa=iCP(s,o),ia=iCP(s,i);return Math.max(0,polyArea(oa)-polyArea(ia));};
+    if(a.kind==='solid'&&b.kind==='solid')return polyArea(iCP(a.poly,b.poly));
+    if(a.kind==='ring'&&b.kind==='solid')return rs(a.outer,a.inner,b.poly);
+    if(a.kind==='solid'&&b.kind==='ring')return rs(b.outer,b.inner,a.poly);
+    if(a.kind==='ring'&&b.kind==='ring'){const oaOb=polyArea(iCP(a.outer,b.outer)),oaIb=polyArea(iCP(a.outer,b.inner)),iaOb=polyArea(iCP(a.inner,b.outer)),iaIb=polyArea(iCP(a.inner,b.inner));return Math.max(0,oaOb-oaIb-iaOb+iaIb);}
+    return 0;
+}
+function collectOL(cand){const keys=[];elements.forEach((mesh,sk)=>{const t=elementTypes.get(sk),{q:eq,r:er}=mesh.userData;if(olap(cand,worldFootprint(t,eq,er))>OE)keys.push(sk);});return keys;}
+function getSector(dx,dy){let a=Math.atan2(dy,dx)*180/Math.PI;if(a<0)a+=360;return Math.floor(a/60)%6;}
+function getCorner(dx,dy){return getSector(dx,dy);}
+function getQuart(dx,dy){if(dx>=0&&dy>=0)return 0;if(dx<0&&dy>=0)return 1;if(dx<0&&dy<0)return 2;return 3;}
+function occSlots(q,r){return ALL_SLOTS.filter(s=>elements.has(slotKey(q,r,s)));}
+function resolveType(tool,hit,cp){const dx=hit.x-cp.x,dy=hit.y-cp.y;if(tool==='trap')return`trap_${getSector(dx,dy)}`;if(tool==='trapFix')return`trapFix_${getSector(dx,dy)}`;if(tool==='trapFull')return`trapFull_${getSector(dx,dy)}`;if(tool==='penta')return`penta_${getCorner(dx,dy)}`;if(tool==='pentaFix')return`pentaFix_${getCorner(dx,dy)}`;if(tool==='pentaFull')return`pentaFull_${getCorner(dx,dy)}`;if(tool==='quart')return`quart_${getQuart(dx,dy)}`;if(tool==='quartFix')return`quartFix_${getQuart(dx,dy)}`;if(tool==='quartFull')return`quartFull_${getQuart(dx,dy)}`;return tool;}
+function slotOf(t){if(t==='add')return'hex';return ALL_SLOTS.includes(t)?t:null;}
+const MXM=[3,2,1,0,5,4],MYM=[0,5,4,3,2,1],QMX=[1,0,3,2],QMY=[3,2,1,0];
+const IPX=['trap','trapFix','trapFull','penta','pentaFix','pentaFull'],QPX=['quart','quartFix','quartFull'];
+function remapType(type,map){for(const p of QPX){const s=`${p}_`;if(!type.startsWith(s))continue;const n=+type.slice(s.length);if(!Number.isInteger(n)||n<0||n>3)return type;return`${p}_${map===MXM?QMX:QMY[n]}`;}for(const p of IPX){const s=`${p}_`;if(!type.startsWith(s))continue;const n=+type.slice(s.length);if(!Number.isInteger(n)||n<0||n>5)return type;return`${p}_${map[n]}`;}return type;}
+
+const ELEM_MAT=new THREE.MeshStandardMaterial({color:0xf39c12,roughness:.3,metalness:.1,emissive:0xf39c12,emissiveIntensity:.04});
+const PREVIEW_MAT=new THREE.MeshStandardMaterial({color:0xf39c12,roughness:.3,metalness:.1,transparent:true,opacity:.28,depthWrite:false});
+let previewMesh=null;const threatenedMeshes=new Set();
+
+function clearTH(){threatenedMeshes.forEach(mesh=>{const m=mesh.material,o=mesh.userData?.tO;if(m&&o){m.color.setHex(o.c);m.emissive.setHex(o.e);m.emissiveIntensity=o.ei;}});threatenedMeshes.clear();}
+function markTH(q,r,ct){clearTH();const cf=worldFootprint(ct,q,r);elements.forEach((mesh,sk)=>{const t=elementTypes.get(sk),{q:eq,r:er}=mesh.userData;if(olap(cf,worldFootprint(t,eq,er))<=OE)return;const m=mesh.material;if(!m||!m.color||!m.emissive)return;if(!mesh.userData.tO)mesh.userData.tO={c:m.color.getHex(),e:m.emissive.getHex(),ei:m.emissiveIntensity};m.color.setHex(0xff6b6b);m.emissive.setHex(0xff0000);m.emissiveIntensity=.35;threatenedMeshes.add(mesh);});}
+
+function mirrorDesign(axis){
+    if(!elements.size)return;
+    if(axis==='z'){setShoulder(shoulderDir==='back'?'front':'back');hidePreview();if(currentMouseE)updatePreview(currentMouseE);return;}
+    const mapped=[];elements.forEach((mesh,sk)=>{const t=elementTypes.get(sk),{q,r}=mesh.userData;let nq=q,nr=r,nt=t;if(axis==='x'){nq=-q;nt=remapType(t,MXM);}else{nr=(q%2===0)?-r:(-r-1);nt=remapType(t,MYM);}mapped.push({q:nq,r:nr,type:nt});});
+    elements.forEach(m=>{scene.remove(m);m.geometry.dispose();});elements.clear();elementTypes.clear();
+    borderMeshes.forEach(m=>{scene.remove(m);m.geometry.dispose();});borderMeshes.clear();
+    mapped.forEach(({q,r,type})=>placeElement(q,r,type));updateStats();hidePreview();if(currentMouseE)updatePreview(currentMouseE);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Événements boutons
+   ═══════════════════════════════════════════════════════════════════════════ */
+document.getElementById('addBtn').addEventListener('click',()=>setTool('add'));
+document.getElementById('hexFullBtn').addEventListener('click',()=>setTool('hexFull'));
+document.getElementById('hexFixFullBtn').addEventListener('click',()=>setTool('hexFixFull'));
+document.getElementById('trapBtn').addEventListener('click',()=>setTool('trap'));
+document.getElementById('trapFullBtn').addEventListener('click',()=>setTool('trapFull'));
+document.getElementById('trapFixBtn').addEventListener('click',()=>setTool('trapFix'));
+document.getElementById('pentaBtn').addEventListener('click',()=>setTool('penta'));
+document.getElementById('pentaFullBtn').addEventListener('click',()=>setTool('pentaFull'));
+document.getElementById('pentaFixBtn').addEventListener('click',()=>setTool('pentaFix'));
+document.getElementById('quartBtn').addEventListener('click',()=>setTool('quart'));
+document.getElementById('quartFullBtn').addEventListener('click',()=>setTool('quartFull'));
+document.getElementById('quartFixBtn').addEventListener('click',()=>setTool('quartFix'));
+document.getElementById('removeBtn').addEventListener('click',()=>setTool('remove'));
+document.getElementById('mirrorXBtn').addEventListener('click',()=>mirrorDesign('x'));
+document.getElementById('mirrorYBtn').addEventListener('click',()=>mirrorDesign('y'));
+document.getElementById('mirrorZBtn').addEventListener('click',()=>mirrorDesign('z'));
+document.getElementById('borderBtn').addEventListener('click',()=>toggleBorder());
+document.getElementById('exportBtn').addEventListener('click',()=>exportSTL());
+document.getElementById('clearBtn').addEventListener('click',()=>clearAll());
+document.getElementById('langBtn').addEventListener('click',()=>toggleLang());
+document.getElementById('resetViewBtn').addEventListener('click',()=>resetView());
+document.getElementById('gridToggleBtn').addEventListener('click',()=>toggleGrid());
+document.getElementById('viewToggleBtn').addEventListener('click',()=>toggleView());
+
+init();animate();
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Init / Grid / Events
+   ═══════════════════════════════════════════════════════════════════════════ */
+function cellPos(q,r){return{x:q*HEX_S*1.5,y:r*HEX_H+(q%2?HEX_H/2:0)};}
+
+function init(){
+    scene=new THREE.Scene();scene.background=new THREE.Color(0x0d0d0d);
+    const W=window.innerWidth-300,H=window.innerHeight;
+    camera=new THREE.PerspectiveCamera(60,W/H,.1,2000);camera.position.set(0,0,280);
+    const oh=280,asp=W/H;
+    orthoCamera=new THREE.OrthographicCamera(-oh*asp,oh*asp,oh,-oh,.1,5000);orthoCamera.position.set(0,0,500);orthoCamera.lookAt(0,0,0);
+    renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(window.devicePixelRatio);renderer.setSize(W,H);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;
+    const dl1=new THREE.DirectionalLight(0xffffff,1.5);dl1.position.set(10,20,30);scene.add(dl1);
+    const dl2=new THREE.DirectionalLight(0xffffff,.4);dl2.position.set(-10,-10,10);scene.add(dl2);
+    scene.add(new THREE.AmbientLight(0x444444));
+    buildGrid();bindEvents();
+}
+
+function buildGrid(){
+    const hr=HEX_S*.97;const p2=Array.from({length:6},(_,i)=>new THREE.Vector2(hr*Math.cos(i*DEG60),hr*Math.sin(i*DEG60)));
+    const p3=[...p2.map(p=>new THREE.Vector3(p.x,p.y,0)),new THREE.Vector3(hr,0,0)];
+    const gg=new THREE.BufferGeometry().setFromPoints(p3);const gm=new THREE.LineBasicMaterial({color:0x3a3a42,transparent:true,opacity:.9});
+    const hg=new THREE.ShapeGeometry(new THREE.Shape(p2));const hm=new THREE.MeshBasicMaterial({side:THREE.DoubleSide,visible:false});
+    for(let q=-20;q<20;q++)for(let r=-14;r<14;r++){const{x,y}=cellPos(q,r);const gl=new THREE.Line(gg,gm);gl.position.set(x,y,-.5);scene.add(gl);gridLines.push(gl);const hi=new THREE.Mesh(hg,hm);hi.position.set(x,y,0);hi.userData={q,r};scene.add(hi);hitPlanes.set(`${q},${r}`,hi);}
+}
+
+function bindEvents(){
+    const el=renderer.domElement;
+    el.addEventListener('mousedown',e=>{mouseStart.set(e.clientX,e.clientY);didDrag=false;});
+    el.addEventListener('mousemove',e=>{if(Math.hypot(e.clientX-mouseStart.x,e.clientY-mouseStart.y)>4)didDrag=true;currentMouseE=e;if(isPainting)paintAt(e);else if(isErasing)eraseAt(e);else updatePreview(e);});
+    el.addEventListener('mouseleave',()=>hidePreview());
+    el.addEventListener('mouseup',e=>{if(!didDrag)handleClick(e);});
+    window.addEventListener('keydown',e=>{
+        if(e.code==='Space'&&!isPainting&&!isErasing){e.preventDefault();isPainting=true;lastPaintKey=null;controls.enabled=false;document.getElementById('canvas-container').classList.add('painting');document.getElementById('spaceKey').classList.add('paint-active');if(currentMouseE)paintAt(currentMouseE);}
+        if((e.code==='ControlLeft'||e.code==='ControlRight')&&!isErasing&&!isPainting){e.preventDefault();isErasing=true;lastEraseKey=null;controls.enabled=false;document.getElementById('canvas-container').classList.add('erasing');document.getElementById('ctrlKey').classList.add('erase-active');if(currentMouseE)eraseAt(currentMouseE);}
+        if(e.code==='KeyF')resetView();if(e.code==='KeyP')toggleView();
+    });
+    window.addEventListener('keyup',e=>{
+        if(e.code==='Space'){isPainting=false;lastPaintKey=null;if(!isErasing)controls.enabled=true;document.getElementById('canvas-container').classList.remove('painting');document.getElementById('spaceKey').classList.remove('paint-active');}
+        if(e.code==='ControlLeft'||e.code==='ControlRight'){isErasing=false;lastEraseKey=null;if(!isPainting)controls.enabled=true;document.getElementById('canvas-container').classList.remove('erasing');document.getElementById('ctrlKey').classList.remove('erase-active');}
+    });
+    window.addEventListener('resize',()=>{const W=window.innerWidth-300,H=window.innerHeight;if(!isOrtho){camera.aspect=W/H;camera.updateProjectionMatrix();}else updOrtho(W,H);renderer.setSize(W,H);});
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Raycaster / Preview / Place / Paint / Erase
+   ═══════════════════════════════════════════════════════════════════════════ */
+function getHitCell(e){const rect=renderer.domElement.getBoundingClientRect();ndcMouse.set(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);raycaster.setFromCamera(ndcMouse,isOrtho?orthoCamera:camera);const hits=raycaster.intersectObjects([...hitPlanes.values()],false);if(!hits.length)return null;const{q,r}=hits[0].object.userData;return{q,r,hitPt:hits[0].point};}
+
+function updatePreview(e){if(isPainting||isErasing||activeTool==='remove'){hidePreview();return;}const cell=getHitCell(e);if(!cell){hidePreview();return;}const{q,r,hitPt}=cell,cp=cellPos(q,r);const ct=resolveType(activeTool,hitPt,cp),slot=slotOf(ct);if(!slot||elements.has(slotKey(q,r,slot))){hidePreview();return;}markTH(q,r,ct);const geo=buildGeometry(ct);if(!previewMesh){previewMesh=new THREE.Mesh(geo,PREVIEW_MAT);scene.add(previewMesh);}else{previewMesh.geometry.dispose();previewMesh.geometry=geo;}previewMesh.position.set(cp.x,cp.y,.1);previewMesh.visible=true;}
+function hidePreview(){clearTH();if(previewMesh)previewMesh.visible=false;}
+
+function removeSlot(sk){const m=elements.get(sk);if(m){const{q,r}=m.userData;threatenedMeshes.delete(m);scene.remove(m);elements.delete(sk);elementTypes.delete(sk);removeBorderMesh(sk);refreshNeighborBorders(q,r);}else removeBorderMesh(sk);}
+function removeAllAt(q,r){ALL_SLOTS.forEach(s=>removeSlot(slotKey(q,r,s)));}
+function placeElement(q,r,ct){if(!ct||ct==='remove')return;const slot=slotOf(ct);if(!slot)return;const cf=worldFootprint(ct,q,r);collectOL(cf).forEach(sk=>removeSlot(sk));const sk=slotKey(q,r,slot);const mesh=new THREE.Mesh(buildGeometry(ct),ELEM_MAT.clone());const{x,y}=cellPos(q,r);mesh.position.set(x,y,0);mesh.userData={q,r,slot};scene.add(mesh);elements.set(sk,mesh);elementTypes.set(sk,ct);if(showBorder)addBorderMesh(sk,ct,q,r);refreshNeighborBorders(q,r);}
+
+function handleClick(e){const cell=getHitCell(e);if(!cell)return;const{q,r,hitPt}=cell;if(activeTool==='remove'){const had=occSlots(q,r).length>0;removeAllAt(q,r);if(had)updateStats();return;}const cp=cellPos(q,r),ct=resolveType(activeTool,hitPt,cp),slot=slotOf(ct),sk=slotKey(q,r,slot);if(elements.has(sk))removeSlot(sk);else placeElement(q,r,ct);updateStats();updatePreview(e);}
+function paintAt(e){const cell=getHitCell(e);if(!cell)return;const{q,r,hitPt}=cell;if(activeTool==='remove'){eraseAt(e);return;}const cid=`${q},${r}`;if(cid===lastPaintKey)return;lastPaintKey=cid;const cp=cellPos(q,r),ct=resolveType(activeTool,hitPt,cp),slot=slotOf(ct);if(!elements.has(slotKey(q,r,slot))){placeElement(q,r,ct);updateStats();}}
+function eraseAt(e){const cell=getHitCell(e);if(!cell)return;const{q,r}=cell;const cid=`${q},${r}`;if(cid===lastEraseKey)return;lastEraseKey=cid;const had=occSlots(q,r).length>0;removeAllAt(q,r);if(had)updateStats();}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Stats
+   ═══════════════════════════════════════════════════════════════════════════ */
+function updateStats(){
+    document.getElementById('hexCount').innerText=elements.size;
+    if(!elements.size){document.getElementById('pieceSize').textContent='— × —';return;}
+    const HH=HEX_H/2;let mnX=Infinity,mxX=-Infinity,mnY=Infinity,mxY=-Infinity;
+    elements.forEach((mesh,sk)=>{const t=elementTypes.get(sk),{x:cx,y:cy}=mesh.position;
+        const ht=t==='trap_1'||t==='trapFix_1'||t==='trapFull_1',hb=t==='trap_4'||t==='trapFix_4'||t==='trapFull_4';
+        mnX=Math.min(mnX,cx-HEX_S);mxX=Math.max(mxX,cx+HEX_S);mnY=Math.min(mnY,cy-(ht?0:HH));mxY=Math.max(mxY,cy+(hb?0:HH));
+    });
+    document.getElementById('pieceSize').textContent=`${(mxX-mnX).toFixed(1)} × ${(mxY-mnY).toFixed(1)} mm`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   i18n
+   ═══════════════════════════════════════════════════════════════════════════ */
+let currentLang='fr';
+const LANG={
+    fr:{'hex-group-header':'Hexagones','trap-group-header':'Trapèzes','penta-group-header':'Pentagones','quart-group-header':'Quarts','hexhol-btn':'Creux','hexfull-btn':'Plein','hexfixfull-btn':'Fixation','trap-btn':'Creux','trapfull-btn':'Plein','trapfix-btn':'Fixation','penta-btn':'Creux','pentafull-btn':'Plein','pentafix-btn':'Fixation','quart-btn':'Creux','quartfull-btn':'Plein','quartfix-btn':'Fixation','remove-btn':'Gomme','mirror-header':'Miroir','mirror-x-btn':'X','mirror-y-btn':'Y','mirror-z-btn':'Z','actions-header':'Actions','export-btn':'Exporter STL','clear-btn':'🗑 Tout effacer','border-btn':'Bordure ext.','stats-label':'Total Éléments','stats-size-label':'Taille','hud-reset':'Centrer','hud-grid':'Grille','hud-shortcuts-title':'Raccourcis','hud-place':'Poser / supprimer','hud-paint':'Peindre','hud-erase-mode':'Effacer','hud-orbit':'Orbiter','hud-zoom':'Zoom','hud-pan':'Pan','hud-orbit-key':'Clic glissé','hud-pan-key':'Clic droit','hud-reset-key':'Centrer vue','hud-toggle-key':'Basculer vue','details-title':'À propos','details-origin':'Système <strong style="color:var(--text-main);">HSW</strong> créé par <strong style="color:var(--text-main);">@RostaP</strong> :','details-inspired':'Inspirations :','confirm-clear':'Tout effacer ?'},
+    en:{'hex-group-header':'Hexagons','trap-group-header':'Trapezoids','penta-group-header':'Pentagons','quart-group-header':'Quarters','hexhol-btn':'Hollow','hexfull-btn':'Solid','hexfixfull-btn':'Mount','trap-btn':'Hollow','trapfull-btn':'Solid','trapfix-btn':'Mount','penta-btn':'Hollow','pentafull-btn':'Solid','pentafix-btn':'Mount','quart-btn':'Hollow','quartfull-btn':'Solid','quartfix-btn':'Mount','remove-btn':'Eraser','mirror-header':'Mirror','mirror-x-btn':'X','mirror-y-btn':'Y','mirror-z-btn':'Z','actions-header':'Actions','export-btn':'Export STL','clear-btn':'🗑 Clear all','border-btn':'Ext. border','stats-label':'Total Elements','stats-size-label':'Size','hud-reset':'Center','hud-grid':'Grid','hud-shortcuts-title':'Shortcuts','hud-place':'Place / remove','hud-paint':'Paint','hud-erase-mode':'Erase','hud-orbit':'Orbit','hud-zoom':'Zoom','hud-pan':'Pan','hud-orbit-key':'Click drag','hud-pan-key':'Right click','hud-reset-key':'Center view','hud-toggle-key':'Toggle view','details-title':'About','details-origin':'The <strong style="color:var(--text-main);">Honeycomb Storage Wall</strong> system was created by <strong style="color:var(--text-main);">@RostaP</strong>:','details-inspired':'Sites that inspired this generator:','confirm-clear':'Clear everything?'}
+};
+function applyLang(lang){currentLang=lang;document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(LANG[lang][k]!==undefined)el.innerHTML=LANG[lang][k];});document.getElementById('langBtn').textContent=lang==='fr'?'EN':'FR';}
+window.toggleLang=()=>applyLang(currentLang==='fr'?'en':'fr');
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Actions globales
+   ═══════════════════════════════════════════════════════════════════════════ */
+window.toggleBorder=()=>{showBorder=!showBorder;document.getElementById('borderBtn').classList.toggle('active',showBorder);if(showBorder){elements.forEach((mesh,sk)=>{addBorderMesh(sk,elementTypes.get(sk),mesh.userData.q,mesh.userData.r);});}else{borderMeshes.forEach(m=>{scene.remove(m);m.geometry.dispose();});borderMeshes.clear();}};
+
+window.setTool=t=>{activeTool=t;['addBtn','hexFullBtn','hexFixFullBtn','trapBtn','trapFullBtn','trapFixBtn','pentaBtn','pentaFullBtn','pentaFixBtn','quartBtn','quartFullBtn','quartFixBtn','removeBtn'].forEach(id=>document.getElementById(id).classList.toggle('active',id===t+'Btn'));hidePreview();};
+
+window.setShoulder=dir=>{shoulderDir=dir;const SI=t=>t==='hexFull'||t.startsWith('trapFull_')||t.startsWith('pentaFull_')||t.startsWith('quartFull_');elements.forEach((mesh,sk)=>{const t=elementTypes.get(sk);if(SI(t))return;mesh.geometry.dispose();mesh.geometry=buildGeometry(t);});};
+
+window.clearAll=()=>{if(!elements.size||!confirm(LANG[currentLang]['confirm-clear']))return;elements.forEach(m=>scene.remove(m));elements.clear();elementTypes.clear();borderMeshes.forEach(m=>{scene.remove(m);m.geometry.dispose();});borderMeshes.clear();updateStats();};
+
+window.exportSTL=()=>{if(!elements.size)return;const s=new THREE.Scene();elements.forEach(m=>s.add(m.clone()));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([new STLExporter().parse(s,{binary:true})],{type:'application/octet-stream'}));a.download='hsw_design.stl';a.click();};
+
+window.resetView=()=>{let cx=0,cy=0;if(elements.size){elements.forEach(m=>{cx+=m.position.x;cy+=m.position.y;});cx/=elements.size;cy/=elements.size;}const c=new THREE.Vector3(cx,cy,0);controls.target.copy(c);if(isOrtho){orthoCamera.position.set(cx,cy,500);orthoCamera.lookAt(c);}else{camera.position.set(cx,cy,280);camera.lookAt(c);}controls.update();};
+
+function updOrtho(W,H){const oh=280,asp=W/H;orthoCamera.left=-oh*asp;orthoCamera.right=oh*asp;orthoCamera.top=oh;orthoCamera.bottom=-oh;orthoCamera.updateProjectionMatrix();}
+
+window.toggleGrid=()=>{gridVisible=!gridVisible;gridLines.forEach(l=>l.visible=gridVisible);document.getElementById('gridToggleBtn').classList.toggle('active',!gridVisible);};
+
+const VI_ISO=`<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><polygon points="10,3 17,7 10,11 3,7" fill="rgba(255,255,255,0.06)"/><polygon points="3,7 10,11 10,17 3,13" fill="rgba(255,255,255,0.03)"/><polygon points="17,7 10,11 10,17 17,13" fill="rgba(255,255,255,0.09)"/></svg>`;
+const VI_PERSP=`<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><rect x="6" y="6" width="7" height="7" fill="rgba(255,255,255,0.06)"/><polygon points="6,6 13,6 16,3 9,3" fill="rgba(255,255,255,0.09)"/><polygon points="13,6 16,3 16,10 13,13" fill="rgba(255,255,255,0.03)"/></svg>`;
+
+window.toggleView=()=>{isOrtho=!isOrtho;const btn=document.getElementById('viewToggleBtn');if(isOrtho){orthoCamera.position.set(0,0,500);orthoCamera.lookAt(0,0,0);controls.object=orthoCamera;updOrtho(window.innerWidth-300,window.innerHeight);btn.innerHTML=VI_PERSP;btn.classList.add('active');}else{camera.position.set(0,0,280);controls.object=camera;btn.innerHTML=VI_ISO;btn.classList.remove('active');}controls.target.set(0,0,0);controls.update();};
+
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,isOrtho?orthoCamera:camera);}
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "worktrees": {
+    "wt-1775108926712-1": {
+      "branch": "pinto-kileskus",
+      "path": "g:\\Users\\Babique\\Downloads\\BABIQUES-HSW-GENERATOR\\.kilo\\worktrees\\pinto-kileskus",
+      "parentBranch": "master",
+      "createdAt": "2026-04-02T05:48:46.712Z"
+    }
+  },
+  "sessions": {
+    "ses_2b3435182ffejmSqVrEu1XbuB0": {
+      "worktreeId": "wt-1775108926712-1",
+      "createdAt": "2026-04-02T05:48:47.251Z"
+    }
+  }
+}

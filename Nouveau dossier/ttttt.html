@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Babique's HSW Generator - Fixed Interiors</title>
+    <style>
+        :root {
+            --bg-deep: #0d0d0d; --bg-side: #161618; --bg-group: #1e1e21;
+            --text-main: #e0e0e0; --text-muted: #88888c;
+            --accent: #f39c12; --accent-hover: #e67e22;
+            --danger: #c0392b; --border: #2a2a2e;
+        }
+        body { margin:0; font-family:'Inter',sans-serif; display:flex; height:100vh; background:var(--bg-deep); color:var(--text-main); overflow:hidden; font-size:13px; }
+        #sidebar { width:300px; background:var(--bg-side); padding:25px; display:flex; flex-direction:column; gap:20px; border-right:1px solid var(--border); overflow-y:auto; }
+        #canvas-container { flex-grow:1; position:relative; }
+        .group { background:var(--bg-group); padding:15px; border-radius:6px; border:1px solid var(--border); margin-bottom:10px; }
+        .group-header { font-size:.85em; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; font-weight:600; }
+        .btn { background:transparent; border:1px solid var(--border); padding:10px; color:var(--text-main); cursor:pointer; border-radius:4px; width:100%; margin-bottom:5px; display:flex; align-items:center; gap:10px; }
+        .btn:hover { background:rgba(255,255,255,.05); }
+        .btn.active { border-color:var(--accent); background:rgba(243,156,18,.1); color:var(--accent); }
+        .btn-main { background:var(--accent); border:none; color:#000; font-weight:700; justify-content:center; }
+        #hud-stats { position:absolute; top:16px; left:16px; background:rgba(22,22,24,.9); padding:10px; border-radius:6px; border:1px solid var(--border); }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h1>HSW <span>Generator</span></h1>
+    <div class="group">
+        <div class="group-header">Type de Pièce</div>
+        <button id="btn-creux" class="btn active">Hexagone Creux</button>
+        <button id="btn-plein" class="btn">Hexagone Plein</button>
+        <button id="btn-border" class="btn">Bordure Étendue</button>
+    </div>
+    <div class="group">
+        <button id="exportBtn" class="btn btn-main">Exporter STL (Figé)</button>
+        <button id="clearBtn" class="btn" style="color:var(--danger)">Tout effacer</button>
+    </div>
+    <div style="font-size: 0.8em; color: var(--text-muted);">
+        Règle active : L'intérieur des pièces creuses est prioritaire sur toute géométrie superposée.
+    </div>
+</div>
+
+<div id="canvas-container">
+    <div id="hud-stats">Pièces : <span id="count">0</span></div>
+</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "three-csg-ts": "https://unpkg.com/three-csg-ts@3.1.11/dist/index.js"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+import { CSG } from 'three-csg-ts';
+
+// Constantes HSW
+const HOLE_W = 20;
+const WALL = 1.8;
+const DEPTH = 8;
+const HEX_H = HOLE_W + WALL * 2;
+const HEX_S = HEX_H / Math.sqrt(3);
+const INNER_S = HOLE_W / Math.sqrt(3);
+
+// Scène
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth - 300, window.innerHeight);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+camera.position.set(0, 0, 100);
+
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(1, 1, 2);
+scene.add(light, new THREE.AmbientLight(0x404040));
+
+// Stockage
+let elements = []; // { mesh, type, isCreux, coreMesh }
+
+// Helpers Géométrie
+function getHexPts(r) {
+    const pts = [];
+    for(let i=0; i<6; i++) {
+        const a = (i * 60) * Math.PI / 180;
+        pts.push(new THREE.Vector2(r * Math.cos(a), r * Math.sin(a)));
+    }
+    return pts;
+}
+
+// Fonction pour créer le VOLUME DE VIDE (Le Core)
+function buildInterieurExclusion() {
+    const pts = getHexPts(INNER_S + 0.05); // Légère marge pour éviter les faces coplanaires
+    const shape = new THREE.Shape(pts);
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: DEPTH + 4, bevelEnabled: false });
+    geo.translate(0, 0, -2); // On dépasse devant et derrière
+    return geo;
+}
+
+function buildHexCreux() {
+    const outer = getHexPts(HEX_S);
+    const inner = getHexPts(INNER_S);
+    const shape = new THREE.Shape(outer);
+    const hole = new THREE.Path(inner);
+    shape.holes.push(hole);
+    return new THREE.ExtrudeGeometry(shape, { depth: DEPTH, bevelEnabled: false });
+}
+
+// Placement au clic (Simplifié pour l'exemple)
+window.addEventListener('mousedown', (e) => {
+    if (e.target.tagName !== 'CANVAS') return;
+    
+    // Logique de placement HSW...
+    const geo = buildHexCreux();
+    const mat = new THREE.MeshStandardMaterial({ color: 0xf39c12 });
+    const mesh = new THREE.Mesh(geo, mat);
+    
+    // Création du core d'exclusion pour cette pièce
+    const coreGeo = buildInterieurExclusion();
+    const coreMesh = new THREE.Mesh(coreGeo); 
+    
+    // On lie les deux
+    mesh.position.set(Math.random()*50, Math.random()*50, 0); // Position aléatoire pour test
+    coreMesh.position.copy(mesh.position);
+    
+    scene.add(mesh);
+    elements.push({ mesh, coreMesh, isCreux: true });
+    document.getElementById('count').innerText = elements.length;
+});
+
+// FONCTION D'EXPORTATION AVEC RÈGLE DE FIXATION INTERIEURE
+async function exportFixedSTL() {
+    if (elements.length === 0) return;
+
+    console.log("Calcul de la géométrie figée...");
+    
+    // 1. On crée le bloc solide global (Union de toutes les pièces)
+    let globalCSG = null;
+
+    elements.forEach(el => {
+        el.mesh.updateMatrixWorld();
+        const bCSG = CSG.fromMesh(el.mesh);
+        if (!globalCSG) globalCSG = bCSG;
+        else globalCSG = globalCSG.union(bCSG);
+    });
+
+    // 2. On soustrait TOUS les cores de pièces creuses du bloc global
+    // C'est cette étape qui "fige" l'aspect et nettoie les bavures
+    elements.forEach(el => {
+        if (el.isCreux) {
+            el.coreMesh.updateMatrixWorld();
+            const coreCSG = CSG.fromMesh(el.coreMesh);
+            globalCSG = globalCSG.subtract(coreCSG);
+        }
+    });
+
+    // 3. Conversion vers Mesh pour export
+    const finalMesh = CSG.toMesh(globalCSG, new THREE.Matrix4());
+    
+    const exporter = new STLExporter();
+    const result = exporter.parse(finalMesh);
+    const blob = new Blob([result], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'hsw_fined_geometry.stl';
+    link.click();
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportFixedSTL);
+
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>

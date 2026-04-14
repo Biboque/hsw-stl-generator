@@ -1,0 +1,169 @@
+{
+  "version": "9.25",
+  "lang": "fr",
+  "shoulderDir": "front",
+  "showBorder": true,
+  "elements": [
+    {
+      "q": -7,
+      "r": 2,
+      "type": "trap_2"
+    },
+    {
+      "q": -7,
+      "r": 2,
+      "type": "tiers_5"
+    },
+    {
+      "q": -5,
+      "r": 2,
+      "type": "tiers_2"
+    },
+    {
+      "q": -5,
+      "r": 2,
+      "type": "tiers_5"
+    },
+    {
+      "q": -3,
+      "r": 3,
+      "type": "tiers_2"
+    },
+    {
+      "q": -6,
+      "r": 4,
+      "type": "tiers_4"
+    },
+    {
+      "q": -5,
+      "r": 4,
+      "type": "tiers_3"
+    },
+    {
+      "q": -1,
+      "r": 3,
+      "type": "penta_0"
+    },
+    {
+      "q": -1,
+      "r": 4,
+      "type": "quart_3"
+    },
+    {
+      "q": 0,
+      "r": 3,
+      "type": "trap_1"
+    },
+    {
+      "q": 1,
+      "r": 3,
+      "type": "add"
+    },
+    {
+      "q": 0,
+      "r": 4,
+      "type": "add"
+    },
+    {
+      "q": 1,
+      "r": 4,
+      "type": "tiers_3"
+    },
+    {
+      "q": 2,
+      "r": 3,
+      "type": "tri_2"
+    },
+    {
+      "q": -3,
+      "r": 2,
+      "type": "tiers_2"
+    },
+    {
+      "q": -6,
+      "r": 11,
+      "type": "add"
+    },
+    {
+      "q": -6,
+      "r": 10,
+      "type": "hexFull"
+    },
+    {
+      "q": -6,
+      "r": 9,
+      "type": "hexFixFull"
+    },
+    {
+      "q": -4,
+      "r": 11,
+      "type": "penta_3"
+    },
+    {
+      "q": -4,
+      "r": 10,
+      "type": "pentaFull_3"
+    },
+    {
+      "q": -4,
+      "r": 9,
+      "type": "pentaFix_3"
+    },
+    {
+      "q": 0,
+      "r": 11,
+      "type": "tiers_2"
+    },
+    {
+      "q": 0,
+      "r": 10,
+      "type": "tiersFull_2"
+    },
+    {
+      "q": 0,
+      "r": 9,
+      "type": "tiersFix_2"
+    },
+    {
+      "q": -2,
+      "r": 11,
+      "type": "trap_4"
+    },
+    {
+      "q": -2,
+      "r": 10,
+      "type": "trapFull_4"
+    },
+    {
+      "q": -2,
+      "r": 9,
+      "type": "trapFix_4"
+    },
+    {
+      "q": 1,
+      "r": 9,
+      "type": "quartFull_1"
+    },
+    {
+      "q": 1,
+      "r": 8,
+      "type": "quartFix_1"
+    },
+    {
+      "q": 1,
+      "r": 10,
+      "type": "quart_1"
+    },
+    {
+      "q": 2,
+      "r": 10,
+      "type": "triFull_4"
+    },
+    {
+      "q": 2,
+      "r": 11,
+      "type": "tri_4"
+    }
+  ],
+  "savedAt": "2026-04-01T20:41:02.187Z"
+}

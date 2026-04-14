@@ -1,0 +1,309 @@
+{
+  "version": "1.1.9e",
+  "lang": "fr",
+  "shoulderDir": "front",
+  "showBorder": true,
+  "elements": [
+    {
+      "q": -3,
+      "r": 1,
+      "type": "eclatFix_5"
+    },
+    {
+      "q": 0,
+      "r": 0,
+      "type": "eclatFix_3"
+    },
+    {
+      "q": -3,
+      "r": -2,
+      "type": "eclatFix_1"
+    },
+    {
+      "q": -2,
+      "r": 1,
+      "type": "eclat_5"
+    },
+    {
+      "q": -3,
+      "r": 0,
+      "type": "diamond_0"
+    },
+    {
+      "q": 2,
+      "r": 6,
+      "type": "diamond_4"
+    },
+    {
+      "q": 3,
+      "r": 5,
+      "type": "penta_4"
+    },
+    {
+      "q": 1,
+      "r": 5,
+      "type": "penta_5"
+    },
+    {
+      "q": 0,
+      "r": 4,
+      "type": "penta_0"
+    },
+    {
+      "q": 4,
+      "r": 4,
+      "type": "penta_3"
+    },
+    {
+      "q": 1,
+      "r": 2,
+      "type": "penta_1"
+    },
+    {
+      "q": 3,
+      "r": 2,
+      "type": "penta_2"
+    },
+    {
+      "q": 0,
+      "r": 5,
+      "type": "diamond_5"
+    },
+    {
+      "q": 4,
+      "r": 5,
+      "type": "diamond_3"
+    },
+    {
+      "q": 4,
+      "r": 3,
+      "type": "diamond_2"
+    },
+    {
+      "q": 2,
+      "r": 2,
+      "type": "diamond_1"
+    },
+    {
+      "q": 0,
+      "r": 3,
+      "type": "diamond_0"
+    },
+    {
+      "q": 2,
+      "r": 4,
+      "type": "add"
+    },
+    {
+      "q": 2,
+      "r": 5,
+      "type": "add"
+    },
+    {
+      "q": 1,
+      "r": 4,
+      "type": "add"
+    },
+    {
+      "q": 1,
+      "r": 3,
+      "type": "add"
+    },
+    {
+      "q": 2,
+      "r": 3,
+      "type": "add"
+    },
+    {
+      "q": 3,
+      "r": 3,
+      "type": "add"
+    },
+    {
+      "q": 3,
+      "r": 4,
+      "type": "add"
+    },
+    {
+      "q": -3,
+      "r": 9,
+      "type": "add"
+    },
+    {
+      "q": -9,
+      "r": 10,
+      "type": "eclatFix_1"
+    },
+    {
+      "q": -9,
+      "r": 10,
+      "type": "eclatFix_5"
+    },
+    {
+      "q": -9,
+      "r": 10,
+      "type": "eclatFix_0"
+    },
+    {
+      "q": -9,
+      "r": 10,
+      "type": "eclatFix_3"
+    },
+    {
+      "q": -9,
+      "r": 10,
+      "type": "eclatFix_4"
+    },
+    {
+      "q": -9,
+      "r": 10,
+      "type": "eclatFix_2"
+    },
+    {
+      "q": 0,
+      "r": 11,
+      "type": "diamondFix_1"
+    },
+    {
+      "q": 0,
+      "r": 11,
+      "type": "diamondFix_3"
+    },
+    {
+      "q": 0,
+      "r": 11,
+      "type": "diamondFix_5"
+    },
+    {
+      "q": 2,
+      "r": 11,
+      "type": "diamondFix_2"
+    },
+    {
+      "q": 2,
+      "r": 11,
+      "type": "diamondFix_4"
+    },
+    {
+      "q": 2,
+      "r": 11,
+      "type": "diamondFix_0"
+    },
+    {
+      "q": -6,
+      "r": 3,
+      "type": "diamond_2"
+    },
+    {
+      "q": -6,
+      "r": 4,
+      "type": "diamond_1"
+    },
+    {
+      "q": -6,
+      "r": 5,
+      "type": "diamond_0"
+    },
+    {
+      "q": -6,
+      "r": 6,
+      "type": "diamond_3"
+    },
+    {
+      "q": -6,
+      "r": 7,
+      "type": "diamond_4"
+    },
+    {
+      "q": -6,
+      "r": 8,
+      "type": "diamond_5"
+    },
+    {
+      "q": -3,
+      "r": 10,
+      "type": "diamond_4"
+    },
+    {
+      "q": -2,
+      "r": 9,
+      "type": "diamond_2"
+    },
+    {
+      "q": -4,
+      "r": 9,
+      "type": "diamond_0"
+    },
+    {
+      "q": -4,
+      "r": 10,
+      "type": "diamond_5"
+    },
+    {
+      "q": -2,
+      "r": 10,
+      "type": "diamond_3"
+    },
+    {
+      "q": -3,
+      "r": 8,
+      "type": "diamond_1"
+    },
+    {
+      "q": -2,
+      "r": 1,
+      "type": "diamond_3"
+    },
+    {
+      "q": -1,
+      "r": 0,
+      "type": "diamond_4"
+    },
+    {
+      "q": -1,
+      "r": -1,
+      "type": "diamond_1"
+    },
+    {
+      "q": -3,
+      "r": -1,
+      "type": "diamond_5"
+    },
+    {
+      "q": -3,
+      "r": 0,
+      "type": "eclat_5"
+    },
+    {
+      "q": -2,
+      "r": -1,
+      "type": "eclat_1"
+    },
+    {
+      "q": -2,
+      "r": 0,
+      "type": "add"
+    },
+    {
+      "q": -3,
+      "r": -1,
+      "type": "eclat_1"
+    },
+    {
+      "q": -1,
+      "r": 0,
+      "type": "eclat_3"
+    },
+    {
+      "q": -1,
+      "r": -1,
+      "type": "eclat_3"
+    },
+    {
+      "q": -2,
+      "r": -1,
+      "type": "diamond_2"
+    }
+  ],
+  "savedAt": "2026-04-05T01:04:26.464Z"
+}
