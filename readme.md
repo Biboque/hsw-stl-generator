@@ -1,4 +1,4 @@
-# 🐝 Babique's HSW Generator v1.3.52 – Free browser-based STL generator for the Honeycomb Storage Wall system
+# 🐝 Babique's HSW Generator v2.0.0 – Free browser-based STL generator for the Honeycomb Storage Wall system
 
 Hey everyone! I've been using the **HSW (Honeycomb Storage Wall)** system by [@RostaP](https://www.printables.com/model/152592-honeycomb-storage-wall) for a while and wanted a faster way to design custom panels. So I built a tool: a **single HTML file** that runs entirely in your browser — no install, no account, no server.
 
@@ -15,7 +15,7 @@ The Honeycomb Storage Wall is a brilliant 3D-printable modular wall storage syst
 
 ## What does this generator do?
 
-It lets you **paint a custom layout** on a hex grid and export it directly as a **printable STL file** — no OpenSCAD, no slicing software needed to generate the geometry.
+It lets you **paint a custom layout** on a hex grid with **multiple layers**, advanced selection tools, and mirror operations, then export it directly as a **printable STL file** — no OpenSCAD, no slicing software needed to generate the geometry.
 
 ### Shapes available
 
@@ -26,11 +26,11 @@ Each shape comes in 3 variants: **Hollow** (standard HSW slot), **Solid** (fille
 | **Hexagon** | Full hexagon |
 | **Pentagon** | Half-hex on one side |
 | **Trapezoid** | Bottom half of a hexagon |
+| **Diamond** | Angled diamond shape |
+| **Shard** | Half-diamond |
 | **Tier** | Third of a hexagon |
 | **Quarter** | Quarter of a hexagon |
 | **Triangle** | Sixth of a hexagon |
-| **Diamond** | Quarter-hex quadrilateral |
-| **Eclat** | Half-diamond shape |
 
 ### Features
 
@@ -38,9 +38,9 @@ Each shape comes in 3 variants: **Hollow** (standard HSW slot), **Solid** (fille
 - ↩️ **Undo / Redo** (Ctrl+Z / Ctrl+Y)
 - 🪞 **Mirror tools** — flip your layout on X, Y or Z axis instantly
 - 🔲 **Double thickness** — reinforces border cells for sturdier panels
+- 📚 **Layer system** — organize your design with multiple layers, visibility controls, and custom colors
+- 🎯 **Advanced selection** — multi-select with Shift+click, rubber band selection, context menus
 - 💾 **Session save** — your work is saved locally in your browser
-- 🗂️ **Layers** — organize pieces into color-coded groups with visibility control
-- 🔍 **Selection tools** — rubber band select, multi-select with Shift, duplicate selections
 - 📤 **JSON export/import** — share or back up your layouts
 - 📦 **STL export** — ready to slice and print
 - 📐 **Live stats** — element count and panel dimensions update in real time
@@ -49,7 +49,7 @@ Each shape comes in 3 variants: **Hollow** (standard HSW slot), **Solid** (fille
 
 ### Technical details
 
-- Built as a **single self-contained HTML file** (~6800 lines)
+- Built as a **single self-contained HTML file** (~3400 lines)
 - Uses **Three.js** (loaded from CDN) for 3D rendering and STL export
 - 100% client-side — **no data collected, no server, no tracking**
 - Sessions saved in `localStorage`
@@ -71,15 +71,21 @@ Each shape comes in 3 variants: **Hollow** (standard HSW slot), **Solid** (fille
 |---|---|
 | Undo | Ctrl+Z |
 | Redo | Ctrl+Y |
+| Select tool | A |
+| Shape tool | B |
 | Place one piece | Click |
 | Erase one piece | Right click |
 | Paint mode | Space + hover |
 | Erase mode | Ctrl + hover |
 | Lock rotation | Shift + hover |
+| Delete selected | Delete |
+| Context menu | Right click |
 | Zoom | Wheel |
-| Pan | Right click + move |
+| Orbit | Left click + drag |
+| Pan | Right click + drag |
 | Toggle perspective | P |
 | Center view | F |
+| Toggle grid | G |
 
 ---
 
@@ -94,3 +100,31 @@ If you find it useful, there's a Ko-fi link on the page 🙂
 ---
 
 *Happy to hear feedback, bug reports, or shape requests in the comments!*
+
+---
+
+## Changelog
+
+### v2.0.0 (2026-04-14)
+- **Major rewrite** with layer system, advanced selection tools, and enhanced UI
+- Added complete layer management (visibility, colors, drag-and-drop)
+- Improved 3D preview and camera controls
+- Added mirror operations (X, Y, Z axes)
+- Enhanced selection with multi-select and context menus
+- Added double thickness reinforcement option
+- Fixed selection behavior and layer visibility synchronization
+
+### v1.2.2
+- Fixed fix hole centering for Diamond and Shard (Fixation) — hole now stays safely inside the shape for all orientations
+
+### v1.2.1
+- Fixed mirror system for Diamond and Shard shapes
+- Fixed Diamond shape rendering in debug mirror tool
+- Added Diamond and Shard to `INDEXED_PREFIXES` and `remapIndexedType`
+
+### v1.2.0
+- Added **Diamond** shape (Hollow, Solid, Fixing)
+- Added **Shard** shape (Hollow, Solid, Fixing)
+- New icons for Diamond and Shard buttons
+- Added debug mirror tool for testing shape reflections
+- Fixed mirror maps for Shard
